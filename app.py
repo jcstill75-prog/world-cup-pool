@@ -6,6 +6,26 @@ st.set_page_config(page_title="Office World Cup Pool", page_icon="⚽", layout="
 st.title("🏆 Office World Cup Sweepstakes Leaderboard")
 st.markdown("Track your assigned teams' performance. Rankings update instantly as match results are logged.")
 
+# --- NEW: SCORING RULES SECTION ---
+with st.expander("📖 How does the scoring work? (Click to expand)"):
+    st.markdown("""
+    **Base Match Stats (Applies to all games)**
+    * **Goals Scored:** 1 point per goal
+    * **Clean Sheet:** 2 points (awarded if a team allows exactly 0 goals)
+
+    **Group Stage Outcomes**
+    * **Match Win:** 3 points
+    * **Match Draw:** 1 point
+
+    **Knockout Stage Advancements (Single Elimination)**
+    * **Winning in the Round of 16:** 10 points
+    * **Winning in the Quarter-Finals:** 15 points
+    * **Winning in the Semi-Finals:** 20 points
+    * **Winning the 3rd Place Match:** 10 points
+    * **Winning the Final (World Cup Champions):** 25 points
+    """)
+# -----------------------------------
+
 # Load Data Safely
 @st.cache_data(ttl=60)  
 def load_data():
