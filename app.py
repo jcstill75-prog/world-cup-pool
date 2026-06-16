@@ -11,10 +11,11 @@ st.markdown("Track your assigned teams' performance. Rankings update instantly a
 # ---------------------------------------------------------
 st.subheader("📋 How Scoring Works")
 st.markdown("""
-- **Match Win:** 3 points
-- **Match Draw:** 1 point
+- **Match Win (Group):** 3 points
+- **Match Draw (Group):** 1 point
 - **Goals Scored:** 1 point per goal
 - **Clean Sheet:** 2 bonus points
+- **Knockout Stage Advancements:** Massive bonus points replacing the standard win! (Round of 16: +10pts, Quarter-Finals: +15pts, Semi-Finals: +20pts, Final: +25pts, 3rd Place: +10pts)
 """)
 st.divider()
 
@@ -83,9 +84,12 @@ for _, row in matches.iterrows():
     except:
         continue
         
+    # Safely pull the Stage text so we know if it's a knockout round
+    stage = str(row.get('Stage', 'Group')).strip()
+        
     for t in [t1, t2]:
         if t not in team_records:
-            team_records[t] = {"Match_Points": 0, "Goals": 0, "Clean_Sheets": 0}
+            team_records[t] = {"Win_Points": 0, "Draw_Points": 0, "Goals": 0, "Clean_Sheets": 0, "KO_Bonus": 0}
             
     team_records[t1]["Goals"] += s1
     team_records[t2]["Goals"] += s2
@@ -93,33 +97,55 @@ for _, row in matches.iterrows():
     if s2 == 0: team_records[t1]["Clean_Sheets"] += 1
     if s1 == 0: team_records[t2]["Clean_Sheets"] += 1
     
+    # Calculate Winners and Apply Knockout Advancement Bonuses
     if s1 > s2:
-        team_records[t1]["Match_Points"] += 3
+        if stage == "Group":
+            team_records[t1]["Win_Points"] += 3
+        else:
+            if stage == "Round of 16": team_records[t1]["KO_Bonus"] += 10
+            elif stage == "Quarter-Finals": team_records[t1]["KO_Bonus"] += 15
+            elif stage == "Semi-Finals": team_records[t1]["KO_Bonus"] += 20
+            elif stage == "3rd Place Match": team_records[t1]["KO_Bonus"] += 10
+            elif stage == "Final": team_records[t1]["KO_Bonus"] += 25
+            else:
+                team_records[t1]["Win_Points"] += 3  # Fallback just in case
     elif s2 > s1:
-        team_records[t2]["Match_Points"] += 3
+        if stage == "Group":
+            team_records[t2]["Win_Points"] += 3
+        else:
+            if stage == "Round of 16": team_records[t2]["KO_Bonus"] += 10
+            elif stage == "Quarter-Finals": team_records[t2]["KO_Bonus"] += 15
+            elif stage == "Semi-Finals": team_records[t2]["KO_Bonus"] += 20
+            elif stage == "3rd Place Match": team_records[t2]["KO_Bonus"] += 10
+            elif stage == "Final": team_records[t2]["KO_Bonus"] += 25
+            else:
+                team_records[t2]["Win_Points"] += 3  # Fallback just in case
     else:
-        team_records[t1]["Match_Points"] += 1
-        team_records[t2]["Match_Points"] += 1
+        team_records[t1]["Draw_Points"] += 1
+        team_records[t2]["Draw_Points"] += 1
 
-# Build Leaderboard with Math Breakdown
+# Build Leaderboard with Expanded Math Breakdown
 leaderboard = []
 for _, row in draft_df.iterrows():
     player = row["Player"]
     t1, t2, t3 = clean_name(row["Tier 1"]), clean_name(row["Tier 2"]), clean_name(row["Tier 3"])
     
-    p_pts, p_goals, p_cs, p_total = 0, 0, 0, 0
+    p_win, p_draw, p_goals, p_cs, p_ko, p_total = 0, 0, 0, 0, 0, 0
     
     for t in [t1, t2, t3]:
         if t in team_records:
             stats = team_records[t]
-            t_total = stats["Match_Points"] + stats["Goals"] + (stats["Clean_Sheets"] * 2)
-            p_pts += stats["Match_Points"]
+            t_total = stats["Win_Points"] + stats["Draw_Points"] + stats["Goals"] + (stats["Clean_Sheets"] * 2) + stats["KO_Bonus"]
+            
+            p_win += stats["Win_Points"]
+            p_draw += stats["Draw_Points"]
             p_goals += stats["Goals"]
             p_cs += stats["Clean_Sheets"]
+            p_ko += stats["KO_Bonus"]
             p_total += t_total
             
-    # Create the transparent calculation string
-    math_breakdown = f"{p_pts} (Match) + {p_goals} (Goals) + {p_cs * 2} (CS Bonus) = {p_total}"
+    # The new transparent string includes the Knockout bonus logic!
+    math_breakdown = f"{p_win} (Win) + {p_draw} (Draw) + {p_goals} (Goals) + {p_cs * 2} (CS) + {p_ko} (KO Bonus) = {p_total}"
             
     leaderboard.append({
         "Rank": 0, 
@@ -146,7 +172,7 @@ st.dataframe(
     use_container_width=True,
     column_config={
         "Rank": st.column_config.NumberColumn("Rank", width="small"),
-        "Math Breakdown": st.column_config.TextColumn("Math Breakdown", help="Points from: Matches + Goals + Clean Sheets")
+        "Math Breakdown": st.column_config.TextColumn("Math Breakdown", help="Points from: Wins + Draws + Goals + Clean Sheets + Knockout Bonuses")
     }
 )
 st.divider()
