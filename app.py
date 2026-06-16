@@ -44,15 +44,15 @@ fifa_rankings = {
 }
 
 # Load Data Safely
-@st.cache_data(ttl="10m")  
+@st.cache_data(ttl="10m")
 def load_data():
-    try:
-        colleagues_df = pd.read_csv("colleagues.csv")
-        matches_df = pd.read_csv("https://raw.githubusercontent.com/jcstill75-prog/world-cup-pool/refs/heads/main/matches.csv?token=GHSAT0AAAAAAD72F4R6BV7XJMNPYMTSFOLA2RRKZUQ")
-        return colleagues_df, matches_df
-    except Exception as e:
-        st.error(f"Error loading files: {e}")
-        return None, None
+    colleagues_df = pd.read_csv("colleagues.csv")
+    
+    # PASTE YOUR ACTUAL RAW GITHUB LINK BETWEEN THE QUOTES BELOW:
+    github_url = "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/matches.csv"
+    matches_df = pd.read_csv(github_url)
+    
+    return colleagues_df, matches_df
 
 colleagues, matches = load_data()
 
