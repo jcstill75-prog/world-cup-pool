@@ -48,7 +48,7 @@ fifa_rankings = {
 def load_data():
     try:
         colleagues_df = pd.read_csv("colleagues.csv")
-        matches_df = pd.read_csv("matches.csv")
+        matches_df = pd.read_csv("https://raw.githubusercontent.com/jcstill75-prog/world-cup-pool/refs/heads/main/matches.csv?token=GHSAT0AAAAAAD72F4R6BV7XJMNPYMTSFOLA2RRKZUQ")
         return colleagues_df, matches_df
     except Exception as e:
         st.error(f"Error loading files: {e}")
