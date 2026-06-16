@@ -18,13 +18,26 @@ st.markdown("""
 - **Knockout Stage Advancements:** Massive bonus points for surviving! (Round of 16: +10pts, Quarter-Finals: +15pts, Semi-Finals: +20pts, Final: +25pts)
 """)
 
-st.divider() # Adds a clean horizontal line separator
+st.divider()
 
 # Load Data Safely
 @st.cache_data(ttl=60)  # Refresh data every 60 seconds
 def load_data():
     try:
         colleagues_df = pd.read_csv("colleagues.csv")
+        
+        # BULLETPROOF HEADER FIX: Strips invisible spaces and fixes capitalization
+        colleagues_df.columns = colleagues_df.columns.str.strip().str.title()
+        
+        # Automatically renames common variations so the code never crashes
+        colleagues_df = colleagues_df.rename(columns={
+            "Player": "Colleague", 
+            "Name": "Colleague",
+            "Country": "Team",
+            "Assigned Team": "Team",
+            "Tier 1: Favourite": "Team",
+            "Tier 1": "Team"
+        })
         
         # Stream live data from your public Google Sheet
         sheet_url = "https://docs.google.com/spreadsheets/d/1AcO04Psm2XkvEWB8KtSR8ux-20SmVeSF_AxnYp2Vkls/edit?usp=sharing"
