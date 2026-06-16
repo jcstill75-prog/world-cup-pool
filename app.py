@@ -44,7 +44,7 @@ fifa_rankings = {
 }
 
 # Load Data Safely
-@st.cache_data(ttl=60)  
+@st.cache_data(ttl="10m")  
 def load_data():
     try:
         colleagues_df = pd.read_csv("colleagues.csv")
