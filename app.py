@@ -49,7 +49,7 @@ def load_data():
     colleagues_df = pd.read_csv("colleagues.csv")
     
     # PASTE YOUR ACTUAL RAW GITHUB LINK BETWEEN THE QUOTES BELOW:
-    github_url = "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/matches.csv"
+    github_url = "https://raw.githubusercontent.com/jcstill75-prog/world-cup-pool/refs/heads/main/matches.csv?token=GHSAT0AAAAAAD72F4R7RLG6IKHBBVILBHGK2RRK6BQ"
     matches_df = pd.read_csv(github_url)
     
     return colleagues_df, matches_df
