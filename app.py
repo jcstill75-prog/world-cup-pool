@@ -19,7 +19,7 @@ st.markdown("""
 st.divider()
 
 # ---------------------------------------------------------
-# HARDCODED DRAFT DATA (Bypasses colleagues.csv entirely!)
+# HARDCODED DRAFT DATA
 # ---------------------------------------------------------
 @st.cache_data
 def get_draft_data():
@@ -101,31 +101,39 @@ for _, row in matches.iterrows():
         team_records[t1]["Match_Points"] += 1
         team_records[t2]["Match_Points"] += 1
 
-# Build Leaderboard
+# Build Leaderboard with Math Breakdown
 leaderboard = []
 for _, row in draft_df.iterrows():
     player = row["Player"]
     t1, t2, t3 = clean_name(row["Tier 1"]), clean_name(row["Tier 2"]), clean_name(row["Tier 3"])
     
-    p_pts, p_goals, p_total = 0, 0, 0
+    p_pts, p_goals, p_cs, p_total = 0, 0, 0, 0
     
     for t in [t1, t2, t3]:
         if t in team_records:
             stats = team_records[t]
-            # Custom Formula: Match Points + Goals + (Clean Sheets * 2)
             t_total = stats["Match_Points"] + stats["Goals"] + (stats["Clean_Sheets"] * 2)
             p_pts += stats["Match_Points"]
             p_goals += stats["Goals"]
+            p_cs += stats["Clean_Sheets"]
             p_total += t_total
             
+    # Create the transparent calculation string
+    math_breakdown = f"{p_pts} (Match) + {p_goals} (Goals) + {p_cs * 2} (CS Bonus) = {p_total}"
+            
     leaderboard.append({
-        "Rank": 0, "Colleague": player, "Tier 1": t1, "Tier 2": t2, "Tier 3": t3,
-        "Match Points": p_pts, "Goals Scored": p_goals, "Total Points": p_total
+        "Rank": 0, 
+        "Colleague": player, 
+        "Tier 1": t1, 
+        "Tier 2": t2, 
+        "Tier 3": t3,
+        "Math Breakdown": math_breakdown, 
+        "Total Points": p_total
     })
 
 leaderboard_df = pd.DataFrame(leaderboard)
 if not leaderboard_df.empty:
-    leaderboard_df = leaderboard_df.sort_values(by=["Total Points", "Goals Scored", "Match Points"], ascending=False).reset_index(drop=True)
+    leaderboard_df = leaderboard_df.sort_values(by=["Total Points", "Math Breakdown"], ascending=False).reset_index(drop=True)
     leaderboard_df["Rank"] = leaderboard_df.index + 1
 
 # ---------------------------------------------------------
@@ -136,7 +144,10 @@ st.dataframe(
     leaderboard_df, 
     hide_index=True,
     use_container_width=True,
-    column_config={"Rank": st.column_config.NumberColumn("Rank", width="small")}
+    column_config={
+        "Rank": st.column_config.NumberColumn("Rank", width="small"),
+        "Math Breakdown": st.column_config.TextColumn("Math Breakdown", help="Points from: Matches + Goals + Clean Sheets")
+    }
 )
 st.divider()
 
