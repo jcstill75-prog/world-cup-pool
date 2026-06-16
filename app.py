@@ -4,159 +4,149 @@ import pandas as pd
 st.set_page_config(page_title="Office World Cup Pool", page_icon="⚽", layout="wide")
 
 st.title("🏆 Office World Cup Sweepstakes Leaderboard")
-st.markdown("Track your randomly assigned team's performance. Rankings update instantly as match results are logged.")
+st.markdown("Track your assigned teams' performance. Rankings update instantly as match results are logged.")
 
 # ---------------------------------------------------------
 # 1. EXPLANATION OF SCORING
 # ---------------------------------------------------------
 st.subheader("📋 How Scoring Works")
 st.markdown("""
-- **Match Win (Group Stage):** 3 points
-- **Match Draw (Group Stage):** 1 point
+- **Match Win:** 3 points
+- **Match Draw:** 1 point
 - **Goals Scored:** 1 point per goal
 - **Clean Sheet:** 2 bonus points
-- **Knockout Stage Advancements:** Massive bonus points for surviving! (Round of 16: +10pts, Quarter-Finals: +15pts, Semi-Finals: +20pts, Final: +25pts)
 """)
-
 st.divider()
 
-# Load Data Safely
-@st.cache_data(ttl=60)  # Refresh data every 60 seconds
-def load_data():
+# ---------------------------------------------------------
+# HARDCODED DRAFT DATA (Bypasses colleagues.csv entirely!)
+# ---------------------------------------------------------
+@st.cache_data
+def get_draft_data():
+    return pd.DataFrame([
+        {"Player": "Amanda", "Tier 1": "Germany", "Tier 2": "Canada", "Tier 3": "Panama"},
+        {"Player": "Ana", "Tier 1": "Belgium", "Tier 2": "Norway", "Tier 3": "Qatar"},
+        {"Player": "Brian", "Tier 1": "France", "Tier 2": "Australia", "Tier 3": "Jordan"},
+        {"Player": "Cassie", "Tier 1": "Colombia", "Tier 2": "Egypt", "Tier 3": "Algeria"},
+        {"Player": "Craig", "Tier 1": "Mexico", "Tier 2": "Korea Republic", "Tier 3": "South Africa"},
+        {"Player": "Emma", "Tier 1": "USA", "Tier 2": "Japan", "Tier 3": "Uzbekistan"},
+        {"Player": "Jasmine (& Rob)", "Tier 1": "England", "Tier 2": "Senegal", "Tier 3": "Bosnia & Herzegovina"},
+        {"Player": "Jennifer", "Tier 1": "Brazil", "Tier 2": "Czechia", "Tier 3": "Cabo Verde"},
+        {"Player": "Le'Otis", "Tier 1": "Switzerland", "Tier 2": "Türkiye", "Tier 3": "Haiti"},
+        {"Player": "Linda", "Tier 1": "Croatia", "Tier 2": "Austria", "Tier 3": "Saudi Arabia"},
+        {"Player": "Mark", "Tier 1": "Portugal", "Tier 2": "Ghana", "Tier 3": "Curaçao"},
+        {"Player": "Rebecca", "Tier 1": "Netherlands", "Tier 2": "Scotland", "Tier 3": "Congo DR"},
+        {"Player": "Ramon", "Tier 1": "Uruguay", "Tier 2": "Paraguay", "Tier 3": "Iran"},
+        {"Player": "Stacie", "Tier 1": "Morocco", "Tier 2": "Sweden", "Tier 3": "New Zealand"},
+        {"Player": "Taliah", "Tier 1": "Spain", "Tier 2": "Tunisia", "Tier 3": "Côte D'Ivoire"},
+        {"Player": "Tressa", "Tier 1": "Argentina", "Tier 2": "Ecuador", "Tier 3": "Iraq"}
+    ])
+
+# Spell checker to perfectly match your Google Sheet
+TEAM_MAPPING = {
+    "south korea": "Korea Republic", "korea": "Korea Republic", "korea republic": "Korea Republic",
+    "turkey": "Türkiye", "türkiye": "Türkiye", "cote d'ivoire": "Côte D'Ivoire", "ivory coast": "Côte D'Ivoire",
+    "curacao": "Curaçao", "curaçao": "Curaçao", "cape verde": "Cabo Verde", "cabo verde": "Cabo Verde",
+    "usa": "USA", "united states": "USA", "bosnia": "Bosnia & Herzegovina", "bosnia and herzegovina": "Bosnia & Herzegovina",
+    "bosnia & herzegovina": "Bosnia & Herzegovina", "congo dr": "Congo DR", "dr congo": "Congo DR"
+}
+
+def clean_name(name):
+    return TEAM_MAPPING.get(str(name).strip().lower(), str(name).strip())
+
+# ---------------------------------------------------------
+# GOOGLE SHEET DATA STREAM
+# ---------------------------------------------------------
+@st.cache_data(ttl=60)
+def load_matches():
     try:
-        colleagues_df = pd.read_csv("colleagues.csv")
-        
-        # BULLETPROOF HEADER FIX: Strips invisible spaces and fixes capitalization
-        colleagues_df.columns = colleagues_df.columns.str.strip().str.title()
-        
-        # Automatically renames common variations so the code never crashes
-        colleagues_df = colleagues_df.rename(columns={
-            "Player": "Colleague", 
-            "Name": "Colleague",
-            "Country": "Team",
-            "Assigned Team": "Team",
-            "Tier 1: Favourite": "Team",
-            "Tier 1": "Team"
-        })
-        
-        # Stream live data from your public Google Sheet
-        sheet_url = "https://docs.google.com/spreadsheets/d/1AcO04Psm2XkvEWB8KtSR8ux-20SmVeSF_AxnYp2Vkls/edit?usp=sharing"
-        csv_url = sheet_url.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv")
-        matches_df = pd.read_csv(csv_url)
-        
-        return colleagues_df, matches_df
+        url = "https://docs.google.com/spreadsheets/d/1AcO04Psm2XkvEWB8KtSR8ux-20SmVeSF_AxnYp2Vkls/edit?usp=sharing"
+        csv_url = url.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv")
+        df = pd.read_csv(csv_url)
+        df.columns = [c.strip() for c in df.columns]
+        return df.dropna(subset=['Team_1', 'Team_2'])
     except Exception as e:
-        st.error(f"Error loading files: {e}")
-        return None, None
+        st.error(f"Error loading matches from Google Sheets: {e}")
+        return pd.DataFrame()
 
-colleagues, matches = load_data()
+matches = load_matches()
+draft_df = get_draft_data()
 
-if colleagues is not None and matches is not None:
-    # Initialize points dictionary for teams
-    team_stats = {team: {"Points": 0, "Wins": 0, "Draws": 0, "Goals For": 0, "Clean Sheets": 0} 
-                  for team in colleagues["Team"].unique()}
-
-    # Process Matches & Calculate Points
-    for _, row in matches.dropna(subset=['Team_1', 'Team_2']).iterrows():
-        t1, t2 = str(row['Team_1']).strip(), str(row['Team_2']).strip()
+# Calculate Team Stats from your Match Log
+team_records = {}
+for _, row in matches.iterrows():
+    t1 = clean_name(row['Team_1'])
+    t2 = clean_name(row['Team_2'])
+    
+    try:
+        s1, s2 = int(row['Team_1_Score']), int(row['Team_2_Score'])
+    except:
+        continue
         
-        # Ensure scores are integers; skip blank/unplayed games
-        try:
-            s1, s2 = int(row['Team_1_Score']), int(row['Team_2_Score'])
-        except (ValueError, TypeError):
-            continue
+    for t in [t1, t2]:
+        if t not in team_records:
+            team_records[t] = {"Match_Points": 0, "Goals": 0, "Clean_Sheets": 0}
             
-        stage = str(row['Stage']).strip()
-        
-        # Ensure teams exist in our tracking
-        if t1 not in team_stats: team_stats[t1] = {"Points": 0, "Wins": 0, "Draws": 0, "Goals For": 0, "Clean Sheets": 0}
-        if t2 not in team_stats: team_stats[t2] = {"Points": 0, "Wins": 0, "Draws": 0, "Goals For": 0, "Clean Sheets": 0}
-        
-        # 1. Goals For Points (1 pt per goal)
-        team_stats[t1]["Goals For"] += s1
-        team_stats[t1]["Points"] += s1
-        team_stats[t2]["Goals For"] += s2
-        team_stats[t2]["Points"] += s2
-        
-        # 2. Clean Sheet Points (2 pts)
-        if s2 == 0:
-            team_stats[t1]["Clean Sheets"] += 1
-            team_stats[t1]["Points"] += 2
-        if s1 == 0:
-            team_stats[t2]["Clean Sheets"] += 1
-            team_stats[t2]["Points"] += 2
-            
-        # 3. Match Outcome Points
-        if s1 > s2:
-            team_stats[t1]["Wins"] += 1
-            if stage == "Group":
-                team_stats[t1]["Points"] += 3  # Group Win
-            else:
-                # Knockout Advancement Bonuses
-                if stage == "Round of 16": team_stats[t1]["Points"] += 10
-                elif stage == "Quarter-Finals": team_stats[t1]["Points"] += 15
-                elif stage == "Semi-Finals": team_stats[t1]["Points"] += 20
-                elif stage == "3rd Place Match": team_stats[t1]["Points"] += 10
-                elif stage == "Final": team_stats[t1]["Points"] += 25
-        elif s2 > s1:
-            team_stats[t2]["Wins"] += 1
-            if stage == "Group":
-                team_stats[t2]["Points"] += 3
-            else:
-                if stage == "Round of 16": team_stats[t2]["Points"] += 10
-                elif stage == "Quarter-Finals": team_stats[t2]["Points"] += 15
-                elif stage == "Semi-Finals": team_stats[t2]["Points"] += 20
-                elif stage == "3rd Place Match": team_stats[t2]["Points"] += 10
-                elif stage == "Final": team_stats[t2]["Points"] += 25
-        else:
-            if stage == "Group":
-                team_stats[t1]["Draws"] += 1
-                team_stats[t2]["Draws"] += 1
-                team_stats[t1]["Points"] += 1
-                team_stats[t2]["Points"] += 1
+    team_records[t1]["Goals"] += s1
+    team_records[t2]["Goals"] += s2
+    
+    if s2 == 0: team_records[t1]["Clean_Sheets"] += 1
+    if s1 == 0: team_records[t2]["Clean_Sheets"] += 1
+    
+    if s1 > s2:
+        team_records[t1]["Match_Points"] += 3
+    elif s2 > s1:
+        team_records[t2]["Match_Points"] += 3
+    else:
+        team_records[t1]["Match_Points"] += 1
+        team_records[t2]["Match_Points"] += 1
 
-    # Map stats back to Colleagues
-    leaderboard_data = []
-    for _, row in colleagues.iterrows():
-        name = row['Colleague']
-        team = row['Team']
-        stats = team_stats.get(team, {"Points": 0, "Wins": 0, "Draws": 0, "Goals For": 0, "Clean Sheets": 0})
-        leaderboard_data.append({
-            "Rank": 0,
-            "Colleague": name,
-            "Assigned Team": team,
-            "Total Points": stats["Points"],
-            "Match Wins": stats["Wins"],
-            "Match Draws": stats["Draws"],
-            "Goals Scored": stats["Goals For"],
-            "Clean Sheets": stats["Clean Sheets"]
-        })
-        
-    leaderboard_df = pd.DataFrame(leaderboard_data)
-    # Sort by points, then wins, then goals scored
-    leaderboard_df = leaderboard_df.sort_values(by=["Total Points", "Match Wins", "Goals Scored"], ascending=False).reset_index(drop=True)
+# Build Leaderboard
+leaderboard = []
+for _, row in draft_df.iterrows():
+    player = row["Player"]
+    t1, t2, t3 = clean_name(row["Tier 1"]), clean_name(row["Tier 2"]), clean_name(row["Tier 3"])
+    
+    p_pts, p_goals, p_total = 0, 0, 0
+    
+    for t in [t1, t2, t3]:
+        if t in team_records:
+            stats = team_records[t]
+            # Custom Formula: Match Points + Goals + (Clean Sheets * 2)
+            t_total = stats["Match_Points"] + stats["Goals"] + (stats["Clean_Sheets"] * 2)
+            p_pts += stats["Match_Points"]
+            p_goals += stats["Goals"]
+            p_total += t_total
+            
+    leaderboard.append({
+        "Rank": 0, "Colleague": player, "Tier 1": t1, "Tier 2": t2, "Tier 3": t3,
+        "Match Points": p_pts, "Goals Scored": p_goals, "Total Points": p_total
+    })
+
+leaderboard_df = pd.DataFrame(leaderboard)
+if not leaderboard_df.empty:
+    leaderboard_df = leaderboard_df.sort_values(by=["Total Points", "Goals Scored", "Match Points"], ascending=False).reset_index(drop=True)
     leaderboard_df["Rank"] = leaderboard_df.index + 1
 
-    # ---------------------------------------------------------
-    # 2. LEADERBOARD (Full Width)
-    # ---------------------------------------------------------
-    st.subheader("🔥 Current Standings")
-    st.dataframe(
-        leaderboard_df, 
-        hide_index=True,
-        use_container_width=True,
-        column_config={
-            "Rank": st.column_config.NumberColumn("Rank", width="small"),
-            "Total Points": st.column_config.NumberColumn("Total Points", help="Calculated using custom sweepstakes rules")
-        }
-    )
-    
-    st.divider()
+# ---------------------------------------------------------
+# 2. LEADERBOARD (Full Width)
+# ---------------------------------------------------------
+st.subheader("🔥 Current Standings")
+st.dataframe(
+    leaderboard_df, 
+    hide_index=True,
+    use_container_width=True,
+    column_config={"Rank": st.column_config.NumberColumn("Rank", width="small")}
+)
+st.divider()
 
-    # ---------------------------------------------------------
-    # 3. MATCH LOG (Full Width)
-    # ---------------------------------------------------------
-    st.subheader("🏃 Played Matches Log")
+# ---------------------------------------------------------
+# 3. MATCH LOG (Full Width)
+# ---------------------------------------------------------
+st.subheader("🏃 Played Matches Log")
+if not matches.empty:
     st.dataframe(matches, hide_index=True, use_container_width=True)
-        
-    st.info("💡 **Admin Tip:** To update standings or log a new match, simply add the score to your Google Sheet. The dashboard refreshes automatically within 60 seconds.")
+else:
+    st.write("No matches recorded yet.")
+    
+st.info("💡 **Admin Tip:** To update standings, just add the score to your Google Sheet. It refreshes automatically within 60 seconds.")
