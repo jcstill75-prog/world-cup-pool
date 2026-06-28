@@ -15,7 +15,7 @@ st.markdown("""
 - **Match Draw (Group):** 1 point
 - **Goals Scored:** 1 point per goal
 - **Clean Sheet:** 2 bonus points
-- **Knockout Stage Advancements:** Massive bonus points replacing the standard win! (Round of 16: +10pts, Quarter-Finals: +15pts, Semi-Finals: +20pts, Final: +25pts, 3rd Place: +10pts)
+- **Knockout Stage Advancements:** Massive bonus points replacing the standard win! (Round of 32: +5pts, Round of 16: +10pts, Quarter-Finals: +15pts, Semi-Finals: +20pts, Final: +25pts, 3rd Place: +10pts)
 """)
 st.divider()
 
@@ -102,7 +102,8 @@ for _, row in matches.iterrows():
         if stage == "Group":
             team_records[t1]["Win_Points"] += 3
         else:
-            if stage == "Round of 16": team_records[t1]["KO_Bonus"] += 10
+            if stage == "Round of 32": team_records[t1]["KO_Bonus"] += 5
+            elif stage == "Round of 16": team_records[t1]["KO_Bonus"] += 10
             elif stage == "Quarter-Finals": team_records[t1]["KO_Bonus"] += 15
             elif stage == "Semi-Finals": team_records[t1]["KO_Bonus"] += 20
             elif stage == "3rd Place Match": team_records[t1]["KO_Bonus"] += 10
@@ -113,7 +114,8 @@ for _, row in matches.iterrows():
         if stage == "Group":
             team_records[t2]["Win_Points"] += 3
         else:
-            if stage == "Round of 16": team_records[t2]["KO_Bonus"] += 10
+            if stage == "Round of 32": team_records[t2]["KO_Bonus"] += 5
+            elif stage == "Round of 16": team_records[t2]["KO_Bonus"] += 10
             elif stage == "Quarter-Finals": team_records[t2]["KO_Bonus"] += 15
             elif stage == "Semi-Finals": team_records[t2]["KO_Bonus"] += 20
             elif stage == "3rd Place Match": team_records[t2]["KO_Bonus"] += 10
