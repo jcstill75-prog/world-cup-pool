@@ -23,7 +23,6 @@ st.divider()
 # ELIMINATED TEAMS TRACKER
 # ---------------------------------------------------------
 # Updated as of July 7, 2026 (Quarter-Finals Set)
-# To add more teams later, just add a comma and type their name in quotes!
 ELIMINATED_TEAMS = [
     "Algeria", "Australia", "Austria", "Bosnia & Herzegovina", "Brazil", 
     "Cabo Verde", "Canada", "Congo DR", "Côte D'Ivoire", "Croatia", 
@@ -74,21 +73,56 @@ def clean_name(name):
 # ---------------------------------------------------------
 # GOOGLE SHEET DATA STREAM
 # ---------------------------------------------------------
-# ---------------------------------------------------------
-# GOOGLE SHEET DATA STREAM
-# ---------------------------------------------------------
 @st.cache_data(ttl=60)
 def load_matches():
     try:
-        # PASTE YOUR GOOGLE SHEET LINK BETWEEN THE QUOTES BELOW:
+        # 🚨 PASTE YOUR GOOGLE SHEET LINK BETWEEN THE QUOTES ON THE LINE BELOW 🚨
         url = "https://docs.google.com/spreadsheets/d/1AcO04Psm2XkvEWB8KtSR8ux-20SmVeSF_AxnYp2Vkls/edit?gid=2039619876#gid=2039619876"
         
+        # Safety Check: If you forget to add the link, it warns you instead of crashing!
+        if "PASTE" in url:
+            st.warning("⚠️ **App paused:** Please go to line 87 in your GitHub code and paste your actual Google Sheet URL!")
+            return pd.DataFrame()
+
         # Forces any URL format to convert safely to a background CSV export
-        csv_url = url.split("/edit")[0] + "/export?format=csv"
-        
+        if "/edit" in url:
+            csv_url = url.split("/edit")[0] + "/export?format=csv"
+        else:
+            csv_url = url
+            
         df = pd.read_csv(csv_url)
         df.columns = [c.strip() for c in df.columns]
+        
+        if 'Team_1' not in df.columns or 'Team_2' not in df.columns:
+            st.error("⚠️ **Column Error:** The app connected, but couldn't find exact 'Team_1' and 'Team_2' headers. Check your top row!")
+            return pd.DataFrame()
+            
         return df.dropna(subset=['Team_1', 'Team_2'])
     except Exception as e:
         st.error(f"Error loading matches from Google Sheets: {e}")
         return pd.DataFrame()
+
+matches = load_matches()
+draft_df = get_draft_data()
+
+# Calculate Team Stats from your Match Log
+team_records = {}
+for _, row in matches.iterrows():
+    t1 = clean_name(row['Team_1'])
+    t2 = clean_name(row['Team_2'])
+    
+    try:
+        s1, s2 = int(row['Team_1_Score']), int(row['Team_2_Score'])
+    except:
+        continue
+        
+    stage = str(row.get('Stage', 'Group')).strip()
+        
+    for t in [t1, t2]:
+        if t not in team_records:
+            team_records[t] = {"Win_Points": 0, "Draw_Points": 0, "Goals": 0, "Clean_Sheets": 0, "KO_Bonus": 0}
+            
+    team_records[t1]["Goals"] += s1
+    team_records[t2]["Goals"] += s2
+    
+    if s2 == 0: team_records[t1]["Clean_
