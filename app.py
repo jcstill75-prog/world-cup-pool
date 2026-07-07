@@ -31,7 +31,7 @@ ELIMINATED_TEAMS = [
     "Mexico", "Netherlands", "New Zealand", "Panama", "Paraguay", 
     "Portugal", "Qatar", "Saudi Arabia", "Scotland", "Senegal", 
     "South Africa", "Sweden", "Tunisia", "Türkiye", "Uruguay", 
-    "USA", "Uzbekistan", "Colombia"
+    "USA", "Uzbekistan"
 ]
 
 # ---------------------------------------------------------
@@ -77,7 +77,7 @@ def clean_name(name):
 def load_matches():
     try:
         # 🚨 PASTE YOUR GOOGLE SHEET LINK BETWEEN THE QUOTES ON THE LINE BELOW 🚨
-        url = "https://docs.google.com/spreadsheets/d/1AcO04Psm2XkvEWB8KtSR8ux-20SmVeSF_AxnYp2Vkls/edit?gid=2039619876#gid=2039619876"
+        url = "PASTE_YOUR_LIVE_GOOGLE_SHEET_LINK_HERE"
         
         # Safety Check: If you forget to add the link, it warns you instead of crashing!
         if "PASTE" in url:
@@ -181,15 +181,15 @@ for _, row in draft_df.iterrows():
             p_ko += stats["KO_Bonus"]
             p_total += t_total
             
-    # Determine Status Display
+    # Determine Status Display (Clean Emojis Only!)
     if active_count == 3:
-        status = "🟢 Active (3/3)"
+        status = "🟢"
     elif active_count == 2:
-        status = "🟡 Active (2/3)"
+        status = "🟡"
     elif active_count == 1:
-        status = "🔴 Active (1/3)"
+        status = "🔴"
     else:
-        status = "💀 Eliminated"
+        status = "💀"
         
     math_breakdown = f"{p_win} (Win) + {p_draw} (Draw) + {p_goals} (Goals) + {p_cs * 2} (CS) + {p_ko} (KO) = {p_total}"
             
@@ -224,7 +224,7 @@ if not leaderboard_df.empty:
     # Apply Pandas styling to center columns AND color the text
     try:
         styled_leaderboard = leaderboard_df.style.set_properties(
-            subset=['Rank', 'Total Points'], 
+            subset=['Rank', 'Total Points', 'Status'], 
             **{'text-align': 'center'}
         ).map(
             color_eliminated_teams, 
@@ -233,7 +233,7 @@ if not leaderboard_df.empty:
     except AttributeError:
         # Fallback for older versions of Pandas
         styled_leaderboard = leaderboard_df.style.set_properties(
-            subset=['Rank', 'Total Points'], 
+            subset=['Rank', 'Total Points', 'Status'], 
             **{'text-align': 'center'}
         ).applymap(
             color_eliminated_teams, 
