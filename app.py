@@ -23,6 +23,7 @@ st.divider()
 # ELIMINATED TEAMS TRACKER
 # ---------------------------------------------------------
 # Updated as of July 7, 2026 (Quarter-Finals Set)
+# To add more teams later, just add a comma and type their name in quotes!
 ELIMINATED_TEAMS = [
     "Algeria", "Australia", "Austria", "Bosnia & Herzegovina", "Brazil", 
     "Cabo Verde", "Canada", "Congo DR", "Côte D'Ivoire", "Croatia", 
@@ -76,9 +77,12 @@ def clean_name(name):
 @st.cache_data(ttl=60)
 def load_matches():
     try:
-        # REPLACE THE URL BELOW WITH YOUR ACTUAL GOOGLE SHEET URL
+        # PASTE YOUR GOOGLE SHEET LINK BETWEEN THE QUOTES BELOW:
         url = "https://docs.google.com/spreadsheets/d/1AcO04Psm2XkvEWB8KtSR8ux-20SmVeSF_AxnYp2Vkls/edit?gid=2039619876#gid=2039619876"
-        csv_url = url.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv")
+        
+        # Forces any URL format to convert safely to a background CSV export
+        csv_url = url.split("/edit")[0] + "/export?format=csv"
+        
         df = pd.read_csv(csv_url)
         df.columns = [c.strip() for c in df.columns]
         return df.dropna(subset=['Team_1', 'Team_2'])
@@ -165,7 +169,7 @@ for _, row in draft_df.iterrows():
             p_ko += stats["KO_Bonus"]
             p_total += t_total
             
-    # Determine Status
+    # Determine Status Display
     if active_count == 3:
         status = "🟢 Active (3/3)"
     elif active_count == 2:
@@ -217,5 +221,3 @@ if not matches.empty:
     st.dataframe(matches, hide_index=True, use_container_width=True)
 else:
     st.write("No matches recorded yet.")
-    
-
