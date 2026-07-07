@@ -31,7 +31,7 @@ ELIMINATED_TEAMS = [
     "Mexico", "Netherlands", "New Zealand", "Panama", "Paraguay", 
     "Portugal", "Qatar", "Saudi Arabia", "Scotland", "Senegal", 
     "South Africa", "Sweden", "Tunisia", "Türkiye", "Uruguay", 
-    "USA", "Uzbekistan"
+    "USA", "Uzbekistan", "Colombia"
 ]
 
 # ---------------------------------------------------------
