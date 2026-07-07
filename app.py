@@ -1,4 +1,4 @@
-import streamlit as st
+import streamlit as str
 import pandas as pd
 
 st.set_page_config(page_title="Office World Cup Pool", page_icon="⚽", layout="wide")
@@ -18,6 +18,30 @@ st.markdown("""
 - **Knockout Stage Advancements:** Massive bonus points replacing the standard win! (Round of 32: +5pts, Round of 16: +10pts, Quarter-Finals: +15pts, Semi-Finals: +20pts, Final: +25pts, 3rd Place: +10pts)
 """)
 st.divider()
+
+# ---------------------------------------------------------
+# ELIMINATED TEAMS TRACKER
+# ---------------------------------------------------------
+# To add more teams later, just add a comma and type their name in quotes below!
+ELIMINATED_TEAMS = [
+    "Korea Republic", 
+    "South Africa",
+    "Qatar",
+    "Jordan",
+    "Tunisia",
+    "New Zealand",
+    "Uzbekistan",
+    "Czechia",
+    "Cabo Verde",
+    "Panama",
+    "Haiti",
+    "Saudi Arabia",
+    "Curaçao",
+    "Congo DR",
+    "Iran",
+    "Iraq",
+    "Egypt"  # Knocked out in Round of 32 by Argentina
+]
 
 # ---------------------------------------------------------
 # HARDCODED DRAFT DATA
@@ -61,6 +85,7 @@ def clean_name(name):
 @st.cache_data(ttl=60)
 def load_matches():
     try:
+        # REPLACE THE URL BELOW WITH YOUR ACTUAL GOOGLE SHEET URL
         url = "https://docs.google.com/spreadsheets/d/1AcO04Psm2XkvEWB8KtSR8ux-20SmVeSF_AxnYp2Vkls/edit?usp=sharing"
         csv_url = url.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv")
         df = pd.read_csv(csv_url)
@@ -84,7 +109,6 @@ for _, row in matches.iterrows():
     except:
         continue
         
-    # Safely pull the Stage text so we know if it's a knockout round
     stage = str(row.get('Stage', 'Group')).strip()
         
     for t in [t1, t2]:
@@ -97,7 +121,6 @@ for _, row in matches.iterrows():
     if s2 == 0: team_records[t1]["Clean_Sheets"] += 1
     if s1 == 0: team_records[t2]["Clean_Sheets"] += 1
     
-    # Calculate Winners and Apply Knockout Advancement Bonuses
     if s1 > s2:
         if stage == "Group":
             team_records[t1]["Win_Points"] += 3
@@ -109,7 +132,7 @@ for _, row in matches.iterrows():
             elif stage == "3rd Place Match": team_records[t1]["KO_Bonus"] += 10
             elif stage == "Final": team_records[t1]["KO_Bonus"] += 25
             else:
-                team_records[t1]["Win_Points"] += 3  # Fallback just in case
+                team_records[t1]["Win_Points"] += 3 
     elif s2 > s1:
         if stage == "Group":
             team_records[t2]["Win_Points"] += 3
@@ -121,20 +144,25 @@ for _, row in matches.iterrows():
             elif stage == "3rd Place Match": team_records[t2]["KO_Bonus"] += 10
             elif stage == "Final": team_records[t2]["KO_Bonus"] += 25
             else:
-                team_records[t2]["Win_Points"] += 3  # Fallback just in case
+                team_records[t2]["Win_Points"] += 3 
     else:
         team_records[t1]["Draw_Points"] += 1
         team_records[t2]["Draw_Points"] += 1
 
-# Build Leaderboard with Expanded Math Breakdown
+# Build Leaderboard with Elimination Logic
 leaderboard = []
 for _, row in draft_df.iterrows():
     player = row["Player"]
     t1, t2, t3 = clean_name(row["Tier 1"]), clean_name(row["Tier 2"]), clean_name(row["Tier 3"])
     
     p_win, p_draw, p_goals, p_cs, p_ko, p_total = 0, 0, 0, 0, 0, 0
+    active_count = 3
     
     for t in [t1, t2, t3]:
+        # Check for elimination
+        if t in ELIMINATED_TEAMS:
+            active_count -= 1
+            
         if t in team_records:
             stats = team_records[t]
             t_total = stats["Win_Points"] + stats["Draw_Points"] + stats["Goals"] + (stats["Clean_Sheets"] * 2) + stats["KO_Bonus"]
@@ -146,11 +174,13 @@ for _, row in draft_df.iterrows():
             p_ko += stats["KO_Bonus"]
             p_total += t_total
             
-    # The new transparent string includes the Knockout bonus logic!
-    math_breakdown = f"{p_win} (Win) + {p_draw} (Draw) + {p_goals} (Goals) + {p_cs * 2} (CS) + {p_ko} (KO Bonus) = {p_total}"
+    # Determine Status
+    status = "🟢 Active" if active_count > 0 else "💀 Eliminated"
+    math_breakdown = f"{p_win} (Win) + {p_draw} (Draw) + {p_goals} (Goals) + {p_cs * 2} (CS) + {p_ko} (KO) = {p_total}"
             
     leaderboard.append({
         "Rank": 0, 
+        "Status": status,
         "Colleague": player, 
         "Tier 1": t1, 
         "Tier 2": t2, 
@@ -174,6 +204,7 @@ st.dataframe(
     use_container_width=True,
     column_config={
         "Rank": st.column_config.NumberColumn("Rank", width="small"),
+        "Status": st.column_config.TextColumn("Status", width="small"),
         "Math Breakdown": st.column_config.TextColumn("Math Breakdown", help="Points from: Wins + Draws + Goals + Clean Sheets + Knockout Bonuses")
     }
 )
@@ -188,4 +219,4 @@ if not matches.empty:
 else:
     st.write("No matches recorded yet.")
     
-st.info("💡 **Admin Tip:** To update standings, just add the score to your Google Sheet. It refreshes automatically within 60 seconds.")
+st.info("💡 **Admin Tip:** Remember to paste your live Google Sheet link on line 83!")
