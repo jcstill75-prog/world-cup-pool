@@ -77,7 +77,7 @@ def clean_name(name):
 def load_matches():
     try:
         # 🚨 PASTE YOUR GOOGLE SHEET LINK BETWEEN THE QUOTES ON THE LINE BELOW 🚨
-        url = "PASTE_YOUR_LIVE_GOOGLE_SHEET_LINK_HERE"
+        url = "https://docs.google.com/spreadsheets/d/1AcO04Psm2XkvEWB8KtSR8ux-20SmVeSF_AxnYp2Vkls/edit?usp=drivesdk"
         
         # Safety Check: If you forget to add the link, it warns you instead of crashing!
         if "PASTE" in url:
