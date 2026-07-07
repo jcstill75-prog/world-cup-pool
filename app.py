@@ -77,7 +77,7 @@ def clean_name(name):
 def load_matches():
     try:
         # REPLACE THE URL BELOW WITH YOUR ACTUAL GOOGLE SHEET URL
-        url = "https://docs.google.com/spreadsheets/d/1AcO04Psm2XkvEWB8KtSR8ux-20SmVeSF_AxnYp2Vkls/edit?usp=sharing"
+        url = "https://docs.google.com/spreadsheets/d/1AcO04Psm2XkvEWB8KtSR8ux-20SmVeSF_AxnYp2Vkls/edit?gid=2039619876#gid=2039619876"
         csv_url = url.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv")
         df = pd.read_csv(csv_url)
         df.columns = [c.strip() for c in df.columns]
@@ -218,4 +218,4 @@ if not matches.empty:
 else:
     st.write("No matches recorded yet.")
     
-st.info("💡 **Admin Tip:** Remember to paste your live Google Sheet link on line 87!")
+
