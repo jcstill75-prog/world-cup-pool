@@ -84,4 +84,4 @@ def load_matches():
         csv_url = url.split("/edit")[0] + "/export?format=csv"
         
         df = pd.read_csv(csv_url)
-        df.columns = [c.strip() for
+        df.columns = [c.strip() for c in df.columns]
