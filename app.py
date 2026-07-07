@@ -125,4 +125,5 @@ for _, row in matches.iterrows():
     team_records[t1]["Goals"] += s1
     team_records[t2]["Goals"] += s2
     
-    if s2 == 0: team_records[t1]["Clean_
+if s2 == 0: team_records[t1]["Clean_Sheets"] += 1
+if s1 == 0: team_records[t2]["Clean_Sheets"] += 1
