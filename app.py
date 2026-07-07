@@ -74,6 +74,9 @@ def clean_name(name):
 # ---------------------------------------------------------
 # GOOGLE SHEET DATA STREAM
 # ---------------------------------------------------------
+# ---------------------------------------------------------
+# GOOGLE SHEET DATA STREAM
+# ---------------------------------------------------------
 @st.cache_data(ttl=60)
 def load_matches():
     try:
@@ -85,3 +88,7 @@ def load_matches():
         
         df = pd.read_csv(csv_url)
         df.columns = [c.strip() for c in df.columns]
+        return df.dropna(subset=['Team_1', 'Team_2'])
+    except Exception as e:
+        st.error(f"Error loading matches from Google Sheets: {e}")
+        return pd.DataFrame()
