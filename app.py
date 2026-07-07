@@ -22,25 +22,16 @@ st.divider()
 # ---------------------------------------------------------
 # ELIMINATED TEAMS TRACKER
 # ---------------------------------------------------------
-# To add more teams later, just add a comma and type their name in quotes below!
+# Updated as of July 7, 2026 (Quarter-Finals Set)
 ELIMINATED_TEAMS = [
-    "Korea Republic", 
-    "South Africa",
-    "Qatar",
-    "Jordan",
-    "Tunisia",
-    "New Zealand",
-    "Uzbekistan",
-    "Czechia",
-    "Cabo Verde",
-    "Panama",
-    "Haiti",
-    "Saudi Arabia",
-    "Curaçao",
-    "Congo DR",
-    "Iran",
-    "Iraq",
-    "Egypt"  # Knocked out in Round of 32 by Argentina
+    "Algeria", "Australia", "Austria", "Bosnia & Herzegovina", "Brazil", 
+    "Cabo Verde", "Canada", "Congo DR", "Côte D'Ivoire", "Croatia", 
+    "Curaçao", "Czechia", "Ecuador", "Egypt", "Germany", "Ghana", 
+    "Haiti", "Iran", "Iraq", "Japan", "Jordan", "Korea Republic", 
+    "Mexico", "Netherlands", "New Zealand", "Panama", "Paraguay", 
+    "Portugal", "Qatar", "Saudi Arabia", "Scotland", "Senegal", 
+    "South Africa", "Sweden", "Tunisia", "Türkiye", "Uruguay", 
+    "USA", "Uzbekistan"
 ]
 
 # ---------------------------------------------------------
@@ -175,7 +166,15 @@ for _, row in draft_df.iterrows():
             p_total += t_total
             
     # Determine Status
-    status = "🟢 Active" if active_count > 0 else "💀 Eliminated"
+    if active_count == 3:
+        status = "🟢 Active (3/3)"
+    elif active_count == 2:
+        status = "🟡 Active (2/3)"
+    elif active_count == 1:
+        status = "🔴 Active (1/3)"
+    else:
+        status = "💀 Eliminated"
+        
     math_breakdown = f"{p_win} (Win) + {p_draw} (Draw) + {p_goals} (Goals) + {p_cs * 2} (CS) + {p_ko} (KO) = {p_total}"
             
     leaderboard.append({
@@ -219,4 +218,4 @@ if not matches.empty:
 else:
     st.write("No matches recorded yet.")
     
-st.info("💡 **Admin Tip:** Remember to paste your live Google Sheet link on line 83!")
+st.info("💡 **Admin Tip:** Remember to paste your live Google Sheet link on line 87!")
