@@ -1,4 +1,4 @@
-import streamlit as str
+import streamlit as st
 import pandas as pd
 
 st.set_page_config(page_title="Office World Cup Pool", page_icon="⚽", layout="wide")
